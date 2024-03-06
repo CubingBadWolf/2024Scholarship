@@ -40,11 +40,10 @@ class DayTimetable{
         }
 
         void PrintTimetable(){
-            if(DayTimetable.size()==1){
-                for(int item=0; item < periodsInDay[Day]; item++){
-                    std::cout << "Period " << item << ": " << DayTimetable[item].Status_Short << std::endl;
-                }
+            for(int item=0; item < periodsInDay[Day]; item++){
+                std::cout << "Period " << item << ": " << DayTimetable[item].Status_Short << std::endl;
             }
+           
         }
 };
 
@@ -52,4 +51,7 @@ int main(){
     DayTimetable Monday;
     Monday.BuildDayTimetable(0);
     Monday.PrintTimetable();
+    char temp;
+    std::cin >> temp; //Temp process to keep window open. 
+    return 0;
 }
