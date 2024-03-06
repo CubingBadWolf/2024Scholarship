@@ -20,6 +20,20 @@ public:
                 //throw "Error";
         }
     }
+    void changeCode(char newCode){
+        bool error = false;
+        switch(newCode){
+            case 'P': Status = "Present";
+            case 'U': Status = "Absent Unassigned";
+            case 'F': Status = "Absent Assigned";
+            case 'W': Status = "Work attatched";
+            case 'X': Status = "Not Teaching";
+            default: Status = "Undefined";
+                error = true;
+                //throw "Error";
+        }
+        Status_Short = newCode;
+    }
 };
 
 class DayTimetable{
