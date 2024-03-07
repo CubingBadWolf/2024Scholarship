@@ -59,7 +59,6 @@ class DayTimetable{
             for(int item=0; item < periodsInDay[Day]; item++){
                 std::cout << "Period " << item << ": " << dayTimetable[item].Status_Short << std::endl;
             }
-           
         }
 };
 
@@ -92,6 +91,8 @@ int main(){
     WeekTimetable WeekOne(1);
     WeekOne.PrintTimetable();
 
+    WeekOne.weekTimetable[4].dayTimetable[0].changeCode('U');
+    WeekOne.PrintTimetable();
     char temp;
     std::cin >> temp; //Temp process to keep window open. 
     return 0;
