@@ -60,6 +60,9 @@ class DayTimetable{
                 std::cout << "Period " << item << ": " << dayTimetable[item].Status_Short << std::endl;
             }
         }
+        std::vector<Period> getDay(){return dayTimetable;}
+        Period getPeriod(int periodNum){return dayTimetable[periodNum];}
+
 };
 
 class WeekTimetable{
@@ -82,6 +85,8 @@ class WeekTimetable{
             std::cout << std::endl;
         }
     }
+    std::vector<DayTimetable> getWeek(){return weekTimetable;}
+    DayTimetable getDay(int day){return weekTimetable[day];}
 };
 
 int main(){
