@@ -1,23 +1,23 @@
 'strURL = "https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024/"   'Make Year not hardcoded.'
 strURL = "https://edgeapi.edgelearning.co.nz/api/V2/school/staff/" & right(date(),4)
-Dim ObjFSO, ObjFile
-Set ObjFSO = CreateObject("Scripting.FileSystemObject")
+Dim objFSO2, objFile2
+Set objFSO2 = CreateObject("Scripting.FileSystemObject")
 
 ' Path to the configuration file
 Dim configFilePath
 configFilePath = "C:\Users\charlie.bauchop\Documents\Scholarship Project\2024Scholarship\config.txt" ' Update this with the actual path
 
 ' Check if the configuration file exists
-If ObjFSO.FileExists(configFilePath) Then
+If objFSO2.FileExists(configFilePath) Then
     ' Open the configuration file for reading
-    Set ObjFile = ObjFSO.OpenTextFile(configFilePath)
+    Set objFile2 = objFSO2.OpenTextFile(configFilePath)
 
     ' Read the content of the configuration file
     Dim configContent
-    configContent = ObjFile.ReadAll()
+    configContent = objFile2.ReadAll()
 
     ' Close the file
-    ObjFile.Close()
+    objFile2.Close()
 
     ' Parse the configuration content to extract the variables
     Dim lines, line, keyValue
@@ -43,7 +43,7 @@ Else
     MsgBox "Configuration file not found!"
 End If
 
-Set ObjFSO = Nothing
+Set objFSO2 = Nothing
 '=============================================
 '===    Reading Keys from config file     ====
 '=============================================
@@ -53,16 +53,14 @@ Set ObjFSO = Nothing
 '=============================================
 strData = GetURLTextContents(strURL, strOrgID, strEAuthID, strEappID)
 
-MsgBox strData
-
 Const fsoForAppend = 8
 Const fsoForWriting = 2
 
-Dim objFSO2
-Set objFSO2 = CreateObject("Scripting.FileSystemObject")
+Dim objFSO
+Set objFSO = CreateObject("Scripting.FileSystemObject")
 
 Dim sJsonFile
-sJsonFile = "C:\Users\charlie.bauchop\Documents\API_fetchGroups.json"
+sJsonFile = "C://users/charlie.bauchop/Documents/Scholarship Project/2024Scholarship/test.json"
 Const OVER_WRITE_FILE = True
 
 'Backup existing json file with current weekday as file extension
@@ -78,12 +76,12 @@ Select Case dtmDayOfWeek
     Case 7 dtmDayOfWeek = "Sat"
     Case Else dtmDayOfWeek = "unknown"
 End Select
-If objFSO2.FileExists(sJsonFile) Then
-    objFSO2.CopyFile sJsonFile, sJsonFile & "." & dtmDayOfWeek, OVER_WRITE_FILE
+If objFSO.FileExists(sJsonFile) Then
+    objFSO.CopyFile sJsonFile, sJsonFile & "." & dtmDayOfWeek, OVER_WRITE_FILE
 End if
 
 
-Set objTextFile = objFSO2.CreateTextFile(sJsonFile)
+Set objTextFile = objFSO.CreateTextFile(sJsonFile)
 objTextFile.Close
 
 
@@ -91,10 +89,8 @@ Dim objBAT
 Set objBAT = CreateObject("Scripting.FileSystemObject")
 Set objBATFile = objBAT.OpenTextFile(sJsonFile, fsoForAppend, True)
 
-If Len(strData) > 1 Then
-    strData = Left(strData, Len(strData) - 1)
-    strData = Right(strData, Len(strData) - 1)
-End If
+strData = left(strData,len(strData)-1)
+strData = right(strData,len(strData)-1)
 
 objBATFile.WriteLine "["
 
@@ -150,7 +146,6 @@ objBATFile.WriteLine "]"
 
 objBATFile.Close
 Set objBATFile = Nothing
-Set objBATFile = Nothing
 
 
 '======================================================================================================
@@ -159,7 +154,7 @@ Set objBATFile = Nothing
 
 
 Function GetURLTextContents(strURLtoGet,strSchoolNum,strEdgeBearerToken,strEdgeAppID)
-
+MsgBox(strSchoolNum)
 Dim objHTTP
 Set objHTTP = CreateObject("WinHttp.WinHttpRequest.5.1")
 
@@ -168,8 +163,7 @@ objHTTP.SetRequestHeader "Authorization", strEdgeBearerToken
 objHTTP.SetRequestHeader "appID", strEdgeAppID
 objHTTP.SetRequestHeader "SchoolNo", strSchoolNum
 objHTTP.Send()
-
-MsgBox objHTTP.responseText
+MsgBox(objHTTP.responseText)
 GetURLTextContents = objHTTP.responseText
 Set objHTTP = Nothing
 
