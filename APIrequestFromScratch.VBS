@@ -34,17 +34,22 @@ url = "https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024"
 data = GetURLTextContents(url, orgID, eAuthID, eAppID)
 
 MsgBox(data)
-'''Data is blank''' 
+'''Data is outputted!, functioning. ''' 
 
 ' Function to get URL contents
 Function GetURLTextContents(strURLtoGet, strSchoolNum, strEdgeBearerToken, strEdgeAppID)
+    MsgBox(strURLtoGet + strEdgeBearerToken + strEdgeAppID + strSchoolNum)
     Dim objHTTP
     Set objHTTP = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+
     objHTTP.Open "GET", strURLtoGet, False
     objHTTP.SetRequestHeader "Authorization", strEdgeBearerToken
     objHTTP.SetRequestHeader "appID", strEdgeAppID
     objHTTP.SetRequestHeader "SchoolNo", strSchoolNum
     objHTTP.Send()
+
     GetURLTextContents = objHTTP.responseText
     Set objHTTP = Nothing
+
 End Function
