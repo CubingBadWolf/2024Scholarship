@@ -1,4 +1,4 @@
-Dim objFSO, configFile, orgID, url, eAuthID, eAppID, sJasonFile
+Dim objFSO, configFile, orgID, url, eAuthID, eAppID, data, sJasonFile
 set objFSO = CreateObject("Scripting.FileSystemObject")
 set configFile = objFSO.OpenTextFile("config.txt", 1) '1 signifys For Reading only
 
@@ -23,3 +23,28 @@ configFile.Close()
 ''' After writing this I tested by outputting a message box with data'''
 ''' And it worked correctly. '''
 
+If orgID = "" Or eAuthID = "" Or eAppID = "" Then
+    WScript.Echo "Error: Configuration values missing from config.txt"
+    WScript.Quit
+End If
+'''Safety code if something goes wrong - To change to web error when porting'''
+
+url = "https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024"
+
+data = GetURLTextContents(url, orgID, eAuthID, eAppID)
+
+MsgBox(data)
+'''Data is blank''' 
+
+' Function to get URL contents
+Function GetURLTextContents(strURLtoGet, strSchoolNum, strEdgeBearerToken, strEdgeAppID)
+    Dim objHTTP
+    Set objHTTP = CreateObject("WinHttp.WinHttpRequest.5.1")
+    objHTTP.Open "GET", strURLtoGet, False
+    objHTTP.SetRequestHeader "Authorization", strEdgeBearerToken
+    objHTTP.SetRequestHeader "appID", strEdgeAppID
+    objHTTP.SetRequestHeader "SchoolNo", strSchoolNum
+    objHTTP.Send()
+    GetURLTextContents = objHTTP.responseText
+    Set objHTTP = Nothing
+End Function
