@@ -1,3 +1,4 @@
 config.txt
 *.json
 node_modules 
+*.csv
