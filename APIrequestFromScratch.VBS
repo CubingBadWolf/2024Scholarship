@@ -1,4 +1,4 @@
-Dim objFSO, configFile, orgID, url, eAuthID, eAppID, data, sJasonFile
+Dim objFSO, configFile, orgID, url, eAuthID, eAppID, data, JsonFile
 set objFSO = CreateObject("Scripting.FileSystemObject")
 set configFile = objFSO.OpenTextFile("config.txt", 1) '1 signifys For Reading only
 
@@ -18,7 +18,7 @@ Do Until configFile.AtEndOfLine
         End Select
     End If
 Loop
-configFile.Close()
+configFile.Close
 
 ''' After writing this I tested by outputting a message box with data'''
 ''' And it worked correctly. '''
@@ -32,13 +32,12 @@ End If
 url = "https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024"
 
 data = GetURLTextContents(url, orgID, eAuthID, eAppID)
-
-MsgBox(data)
 '''Data is outputted!, functioning. ''' 
+
+
 
 ' Function to get URL contents
 Function GetURLTextContents(strURLtoGet, strSchoolNum, strEdgeBearerToken, strEdgeAppID)
-    MsgBox(strURLtoGet + strEdgeBearerToken + strEdgeAppID + strSchoolNum)
     Dim objHTTP
     Set objHTTP = CreateObject("WinHttp.WinHttpRequest.5.1")
 
