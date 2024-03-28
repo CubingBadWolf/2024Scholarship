@@ -3,8 +3,25 @@ const axios = require('axios');
 const json2csv = require('json2csv').parse;
 
 
-const url = "https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024";
 let data;
+function CallAPI(url, output){
+    //Calls the API endpoint url and outputs to a .json and .csv with file name specified.
+    readConfigAsync()
+        .then(config => {
+            if (config) {
+                return getURLTextContents(url, config.orgID, config.eAuthID, config.eAppID);
+            }
+        })
+        .then(result => {
+            data = result;
+            outputDataToJsonFile(data, `${output}.json`)
+            convertJsonToCsv(data, `${output}.csv`)
+        })
+        .catch(error => {
+            console.error(error);
+        });
+    }
+
 
 async function readConfigAsync() {
     try {
@@ -38,20 +55,6 @@ async function getURLTextContents(strURLtoGet, strSchoolNum, strEdgeBearerToken,
     }
 }
 
-readConfigAsync()
-    .then(config => {
-        if (config) {
-            return getURLTextContents(url, config.orgID, config.eAuthID, config.eAppID);
-        }
-    })
-    .then(result => {
-        data = result;
-        outputDataToJsonFile(data, "output.json")
-        convertJsonToCsv(data, "output.csv")
-    })
-    .catch(error => {
-        console.error(error);
-    });
 
 async function outputDataToJsonFile(data, filename) {
     try {
@@ -81,3 +84,6 @@ async function convertJsonToCsv(jsonData, filename) {
         console.error('Error writing CSV file:', error);
     }
 }
+
+
+CallAPI("https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024", "groups")
