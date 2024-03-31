@@ -12,8 +12,8 @@ function inferColumnTypes(data) {
         const value = data[column];
 
         // Infer data type based on the value
-        if (!isNaN(parseFloat(value)) && isFinite(value)) {
-            columnTypes[column] = 'REAL'; // Numeric data
+        if (!isNaN(value) && Number.isInteger(parseFloat(value))) {
+            columnTypes[column] = 'INTEGER'; // Integer data
         } else if (typeof value === 'string') {
             columnTypes[column] = 'TEXT'; // Text data
         } else {
@@ -60,10 +60,18 @@ function importCSVsAsTables(folderPath) {
                 })
                 .on('end', () => {
                     // Create a table in the database based on the inferred column types
-                    const columns = Object.entries(columnTypes).map(([columnName, columnType]) => `${columnName} ${columnType}`).join(', ');
+                    const columns = Object.entries(columnTypes).map(([columnName, columnType]) => {
+                        if (index === 0 && columnType === 'INTEGER') {
+                            return `${columnName} INTEGER PRIMARY KEY`;
+                        } else {
+                            return `${columnName} ${columnType}`;
+                        }
+                    }).join(', ');
+                    
                     db.serialize(() => {
                         db.run(`CREATE TABLE IF NOT EXISTS ${tableName} (${columns})`);
                     });
+                    
 
                     // Import data into the table
                     fs.createReadStream(csvFilePath)
