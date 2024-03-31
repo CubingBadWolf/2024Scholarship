@@ -26,7 +26,7 @@ function inferColumnTypes(data) {
 
 // Function to create a SQLite database and import data from CSV files
 function importCSVsAsTables(folderPath) {
-    const dbFilePath = 'data.db';
+    const dbFilePath = 'database.db';
     const db = new sqlite3.Database(dbFilePath);
 
     // Read the files in the folder
@@ -39,9 +39,11 @@ function importCSVsAsTables(folderPath) {
         // Filter out CSV files
         const csvFiles = files.filter(file => file.endsWith('.csv'));
 
+        let processedFilesCount = 0;
+
         // Iterate through each CSV file
         csvFiles.forEach((csvFile, index) => {
-            const tableName = `table${index + 1}`;
+            const tableName = path.parse(csvFile).name;
             const csvFilePath = path.join(folderPath, csvFile);
             
             let isFirstLine = true;
@@ -77,14 +79,19 @@ function importCSVsAsTables(folderPath) {
                             });
                         })
                         .on('end', () => {
+                            processedFilesCount++;
                             console.log(`CSV file '${csvFile}' successfully imported as table '${tableName}'.`);
+
+                            // Check if all files have been processed
+                            if (processedFilesCount === csvFiles.length) {
+                                // Close the database connection
+                                db.close();
+                                console.log('Database connection closed.');
+                            }
                         });
                 });
         });
     });
-
-    // Close the database connection
-    db.close();
 }
 
 // Get the folder path where the script is located
