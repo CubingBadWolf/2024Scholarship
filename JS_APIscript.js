@@ -1,8 +1,9 @@
 const fs = require('fs').promises;
 const axios = require('axios');
 const json2csv = require('json2csv').parse;
+const date = new(Date)
 
-
+let year = date.getFullYear()
 let data;
 function CallAPI(url, output){
     //Calls the API endpoint url and outputs to a .json and .csv with file name specified.
@@ -86,4 +87,5 @@ async function convertJsonToCsv(jsonData, filename) {
 }
 
 
-CallAPI("https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024", "groups")
+CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups")
+CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff") //Tests.
