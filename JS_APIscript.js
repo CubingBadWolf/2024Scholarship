@@ -14,7 +14,12 @@ function CallAPI(url, output){
             }
         })
         .then(result => {
-            data = result;
+            if (output == "staff"){
+                data = filterKeysInArray(result, true)
+            }
+            else{
+                data = filterKeysInArray(result, false);
+            }
             outputDataToJsonFile(data, `${output}.json`)
             convertJsonToCsv(data, `${output}.csv`)
         })
@@ -23,6 +28,20 @@ function CallAPI(url, output){
         });
     }
 
+
+// Function to filter out School and SchoolNo as data same in all entries. 
+function filterKeysInArray(jsonArray, isStaff) {
+    keysToFilter = ["SchoolNo", "School"]
+    return jsonArray.map(function(entry) {
+        keysToFilter.forEach(function(key) {
+            delete entry[key];
+        });
+        if (isStaff){
+            delete entry["Groups"]
+        }
+        return entry;
+    });
+  }
 
 async function readConfigAsync() {
     try {
@@ -61,7 +80,7 @@ async function outputDataToJsonFile(data, filename) {
     try {
         // Convert data to JSON string
         const jsonData = JSON.stringify(data, null, 2); // The second argument (null) is for replacer function, and the third argument (2) is for indentation
-
+        
         // Write JSON string to file
         await fs.writeFile(filename, jsonData);
 
