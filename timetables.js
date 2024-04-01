@@ -1,5 +1,5 @@
 class Period {
-    constructor(code) {
+    constructor(code, PeriodCode) {
         this.Status_Short = code;
         switch (code) {
             case 'P':
@@ -21,6 +21,8 @@ class Period {
                 this.Status = "Undefined";
                 break;
         }
+        this.PeriodIdentifier = PeriodCode
+
     }
     changeCode(newCode) {
         switch (newCode) {
