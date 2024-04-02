@@ -27,7 +27,7 @@ function ExecuteQuery(database, query){
 }
 
 async function returnGroupNoFromTeacher(database, teacherCode){
-    const query = `SELECT GroupNo FROM groups WHERE GroupName LIKE '%${teacherCode}%';`; //Finds the groups where teacher code is assinged
+    const query = `SELECT GroupNo FROM groups WHERE GroupName LIKE '%.${teacherCode}.%';`; //Finds the groups where teacher code is assinged
     try {
         const rows = await ExecuteQuery(database, query); // Wait for the query to finish
         const output = rows.map(row => row.GroupNo);
@@ -69,7 +69,6 @@ async function GroupFromName(database, name){
         const code = output[0]; //As only on teacher code per teacher
 
         const groups =  await returnGroupNoFromTeacher(database, code)
-        console.log(groups)
         return groups
     } catch (err) {
         // Handle error
