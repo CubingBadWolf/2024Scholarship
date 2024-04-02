@@ -73,7 +73,6 @@ const name  = ["Tim", "Jones"];
 (async () => {
     try {
         const classes = await GroupFromName(db, name);
-        console.log(classes);
         for (const group of classes) {
             console.log(await returnPeriodCodeFromGroupNo(db, group));
         }
