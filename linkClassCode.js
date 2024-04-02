@@ -43,7 +43,6 @@ async function returnPeriodCodeFromGroupNo(database, groupNo){
             const lastPart = parts[parts.length - 1]; // Get the last part of the array
             return [entry, lastPart]; // Return an array containing the original entry and the last part
         });
-
         return newArray 
     } catch (err) {
         // Handle error
@@ -70,13 +69,26 @@ async function GroupFromName(database, name){
 }
 
 const name  = ["Tim", "Jones"];
-(async () => {
+async function processGroups(database, name) {
     try {
-        const classes = await GroupFromName(db, name);
+        const classes = await GroupFromName(database, name);        
+        const periodCodesArray = [];
+        
         for (const group of classes) {
-            console.log(await returnPeriodCodeFromGroupNo(db, group));
+            const periodCodes = await returnPeriodCodeFromGroupNo(database, group);
+            periodCodesArray.push(periodCodes[0]);
         }
+        return periodCodesArray;
     } catch (error) {
         console.error(error);
+        return [];
     }
-})();
+}
+
+processGroups(db, name)
+    .then(periodCodesArray => {
+        console.log("Period Codes Array:", periodCodesArray);
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
