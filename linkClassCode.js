@@ -3,6 +3,15 @@ const sqlite3 = require('sqlite3').verbose();
 
 const db = new sqlite3.Database('database.db');
 
+function removeDuplicates(arr) {
+    const seen = {};
+    return arr.filter(item => {
+        const stringified = JSON.stringify(item);
+        return seen.hasOwnProperty(stringified) ? false : (seen[stringified] = true);
+    });
+}
+
+
 function ExecuteQuery(database, query){
     return new Promise((resolve, reject) => {
         // Execute the query
@@ -60,6 +69,7 @@ async function GroupFromName(database, name){
         const code = output[0]; //As only on teacher code per teacher
 
         const groups =  await returnGroupNoFromTeacher(database, code)
+        console.log(groups)
         return groups
     } catch (err) {
         // Handle error
@@ -78,7 +88,7 @@ async function processGroups(database, name) {
             const periodCodes = await returnPeriodCodeFromGroupNo(database, group);
             periodCodesArray.push(periodCodes[0]);
         }
-        return periodCodesArray;
+        return removeDuplicates(periodCodesArray); //Removing duplicates streamlines the data
     } catch (error) {
         console.error(error);
         return [];
