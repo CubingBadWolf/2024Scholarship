@@ -1,14 +1,30 @@
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
-
 const db = new sqlite3.Database('database.db');
+const { ContainsStudents } = require('./JS_APIscript');
 
-function removeDuplicates(arr) {
+function removeDuplicates(arr, second) {
     const seen = {};
-    return arr.filter(item => {
+    const uniqueArr = [];
+    const duplicatesArr = [];
+
+    arr.forEach(item => {
         const stringified = JSON.stringify(item);
-        return seen.hasOwnProperty(stringified) ? false : (seen[stringified] = true);
+        if (seen.hasOwnProperty(stringified)) {
+            if (!duplicatesArr.includes(item)) {
+                duplicatesArr.push(item);
+            }
+        } else {
+            uniqueArr.push(item);
+            seen[stringified] = true;
+        }
     });
+    if(second){
+        return [uniqueArr, duplicatesArr];
+    }
+    else{
+    return [uniqueArr, removeDuplicates(duplicatesArr,true)[0]];
+    }
 }
 
 
@@ -27,7 +43,7 @@ function ExecuteQuery(database, query){
 }
 
 async function returnGroupNoFromTeacher(database, teacherCode){
-    const query = `SELECT GroupNo FROM groups WHERE GroupName LIKE '%.${teacherCode}.%';`; //Finds the groups where teacher code is assinged
+    const query = `SELECT GroupNo FROM groups WHERE GroupName LIKE '%.${teacherCode}%';`; //Finds the groups where teacher code is assinged
     try {
         const rows = await ExecuteQuery(database, query); // Wait for the query to finish
         const output = rows.map(row => row.GroupNo);
@@ -50,7 +66,7 @@ async function returnPeriodCodeFromGroupNo(database, groupNo){
         const newArray = output.map(entry => {
             const parts = entry.split('.'); // Split the entry by '.'
             const lastPart = parts[parts.length - 1]; // Get the last part of the array
-            return [entry, lastPart]; // Return an array containing the original entry and the last part
+            return [groupNo, entry, lastPart]; // Return an array containing the original entry and the last part
         });
         return newArray 
     } catch (err) {
@@ -77,7 +93,6 @@ async function GroupFromName(database, name){
     }
 }
 
-const name  = ["Tim", "Jones"];
 async function processGroups(database, name) {
     try {
         const classes = await GroupFromName(database, name);        
@@ -87,16 +102,24 @@ async function processGroups(database, name) {
             const periodCodes = await returnPeriodCodeFromGroupNo(database, group);
             periodCodesArray.push(periodCodes[0]);
         }
-        return removeDuplicates(periodCodesArray); //Removing duplicates streamlines the data
+        let newArray = [];
+        for (const Class of periodCodesArray){
+            containsStudent = await ContainsStudents(Class[0])
+            if(containsStudent){
+                newArray.push(Class);
+            }
+        }
+        return newArray; 
     } catch (error) {
         console.error(error);
         return [];
     }
 }
 
+const name  = ["Natalie", "Chalmers"];
 processGroups(db, name)
-    .then(periodCodesArray => {
-        console.log("Period Codes Array:", periodCodesArray);
+    .then(ClassesWithStudents => {
+        console.log("Classes with Students", ClassesWithStudents);
     })
     .catch(error => {
         console.error("Error:", error);

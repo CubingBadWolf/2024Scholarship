@@ -104,7 +104,34 @@ async function convertJsonToCsv(jsonData, filename) {
         console.error('Error writing CSV file:', error);
     }
 }
+function checkMembersGroup(url, num) {
+    return readConfigAsync()
+        .then(config => {
+            if (config) {
+                return getURLTextContents(url, config.orgID, config.eAuthID, config.eAppID);
+            }
+        })
+        .then(result => {
+            return result; // Return the result to pass it down the chain
+        })
+        .catch(error => {
+            console.error(error);
+            throw error; // Rethrow the error to propagate it further
+        });
+}
 
+async function ContainsStudents(num) {
+    const url = `https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024/${num}`;
+    try {
+        const jsonData = await checkMembersGroup(url, num);
+        const key = "Students";
+        return jsonData[key].length > 0; // Check if Students array is non-empty
+    } catch (error) {
+        console.error(error);
+        return false; // Return false if there was an error
+    }
+}
+module.exports = {ContainsStudents}
 
-CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups")
-CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff") //Tests.
+//CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups")
+//CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff") //Tests.
