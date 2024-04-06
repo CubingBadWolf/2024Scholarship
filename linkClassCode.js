@@ -1,32 +1,7 @@
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('database.db');
-const { ContainsStudents } = require('./JS_APIscript');
-
-function removeDuplicates(arr, second) {
-    const seen = {};
-    const uniqueArr = [];
-    const duplicatesArr = [];
-
-    arr.forEach(item => {
-        const stringified = JSON.stringify(item);
-        if (seen.hasOwnProperty(stringified)) {
-            if (!duplicatesArr.includes(item)) {
-                duplicatesArr.push(item);
-            }
-        } else {
-            uniqueArr.push(item);
-            seen[stringified] = true;
-        }
-    });
-    if(second){
-        return [uniqueArr, duplicatesArr];
-    }
-    else{
-    return [uniqueArr, removeDuplicates(duplicatesArr,true)[0]];
-    }
-}
-
+const { StudentNums } = require('./JS_APIscript');
 
 function ExecuteQuery(database, query){
     return new Promise((resolve, reject) => {
@@ -77,12 +52,25 @@ async function returnPeriodCodeFromGroupNo(database, groupNo){
      
 }
 
+async function GetCode(database, name){
+    const query = `SELECT StaffCode FROM staff WHERE PreferredFirstnames = '${name[0]}' AND PreferredSurname = '${name[1]}';`
+    try{
+        const rows = await ExecuteQuery(database, query); // Wait for the query to finish
+        const output = rows.map(row => row.StaffCode);
+        return output[0]; //As only one teacher code per teacher
+    }
+    catch (err) {
+        console.error('Error :', err);
+        return '';
+    }
+}
+
 async function GroupFromName(database, name){
     const query = `SELECT StaffCode FROM staff WHERE PreferredFirstnames = '${name[0]}' AND PreferredSurname = '${name[1]}';`
     try {
         const rows = await ExecuteQuery(database, query); // Wait for the query to finish
         const output = rows.map(row => row.StaffCode);
-        const code = output[0]; //As only on teacher code per teacher
+        const code = output[0]; //As only one teacher code per teacher
 
         const groups =  await returnGroupNoFromTeacher(database, code)
         return groups
@@ -104,8 +92,9 @@ async function processGroups(database, name) {
         }
         let newArray = [];
         for (const Class of periodCodesArray){
-            containsStudent = await ContainsStudents(Class[0])
-            if(containsStudent){
+            amountOfStudents = await StudentNums(Class[0])
+            if(amountOfStudents > 0){
+                Class.push(amountOfStudents)
                 newArray.push(Class);
             }
         }
@@ -116,10 +105,53 @@ async function processGroups(database, name) {
     }
 }
 
-const name  = ["Natalie", "Chalmers"];
-processGroups(db, name)
-    .then(ClassesWithStudents => {
-        console.log("Classes with Students", ClassesWithStudents);
+async function outputClasses(database, name) {
+    try {
+        const populatedClasses = await processGroups(database, name);
+        const PrimaryClasses = [];
+        const SecondaryClasses = [];
+
+        for (const Class of populatedClasses) {
+            const teacherCode = await GetCode(database, name);
+            if (Class[2] === teacherCode) {
+                PrimaryClasses.push(Class);
+                //TODO fix for Juniors later, 
+            } else {
+                const periodCode = Class[2]; // Assuming this gets the period code
+                let isDuplicate = false;
+
+                for (const existingClass of PrimaryClasses) {
+                    if (existingClass[2] === periodCode) {
+                        isDuplicate = true;
+                        if (Class[3] > existingClass[3]) { // Compare the number of students to determine which class to keep
+                            SecondaryClasses.push(existingClass);
+                            PrimaryClasses[PrimaryClasses.indexOf(existingClass)] = Class; // Replace the existing class with the one having more students
+                        } else {
+                            SecondaryClasses.push(Class);
+                        }
+                        break; // Once a duplicate is found, no need to continue searching
+                    }
+                }
+                if (!isDuplicate) {
+                    PrimaryClasses.push(Class);
+                }
+            }
+        }
+        return [PrimaryClasses, SecondaryClasses];
+
+    }catch (error) {
+        console.error("Error:", error);
+        // Handle error as needed
+        return [null, null]; // Return null values or handle errors appropriately
+    }
+}
+
+
+const name  = ["Lydia", "Evans"];
+outputClasses(db, name)
+    .then(([PrimaryClasses, SecondaryClasses]) => {
+        console.log("Primary Classes:", PrimaryClasses);
+        console.log("Secondary Classes:", SecondaryClasses);
     })
     .catch(error => {
         console.error("Error:", error);
