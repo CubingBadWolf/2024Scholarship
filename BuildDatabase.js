@@ -60,79 +60,82 @@ async function insertDataIgnoringDuplicates(db, tableName, rowData) {
 
 // Function to create a SQLite database and import data from CSV files
 async function importCSVsAsTables(folderPath) {
-    const dbFilePath = 'database.db';
-    const db = new sqlite3.Database(dbFilePath);
+    return new Promise(async (resolve, reject) => {
+        const dbFilePath = 'database.db';
+        const db = new sqlite3.Database(dbFilePath);
 
-    // Read the files in the folder
-    const files = await fs.promises.readdir(folderPath);
+        // Read the files in the folder
+        const files = await fs.promises.readdir(folderPath);
 
-    // Filter out CSV files
-    const csvFiles = files.filter(file => file.endsWith('.csv'));
+        // Filter out CSV files
+        const csvFiles = files.filter(file => file.endsWith('.csv'));
 
-    let processedFilesCount = 0;
+        let processedFilesCount = 0;
 
-    // Iterate through each CSV file sequentially
-    for (const csvFile of csvFiles) {
-        const tableName = path.parse(csvFile).name;
-        const csvFilePath = path.join(folderPath, csvFile);
+        // Iterate through each CSV file sequentially
+        for (const csvFile of csvFiles) {
+            const tableName = path.parse(csvFile).name;
+            const csvFilePath = path.join(folderPath, csvFile);
 
-        let isFirstLine = true;
-        let columnTypes = {};
+            let isFirstLine = true;
+            let columnTypes = {};
 
-        // Read data from the CSV file and infer column types
-        await new Promise((resolve, reject) => {
-            fs.createReadStream(csvFilePath)
-                .pipe(csv())
-                .on('data', (row) => {
-                    if (isFirstLine) {
-                        columnTypes = inferColumnTypes(row);
-                        isFirstLine = false;
-                    }
-                })
-                .on('end', () => {
-                    resolve();
-                })
-                .on('error', (err) => {
-                    reject(err);
-                });
-        });
-
-        // Create a table in the database based on the inferred column types
-        const columns = Object.entries(columnTypes).map(([columnName, columnType]) => {
-            return `${columnName} ${columnType}`;
-        }).join(', ');
-
-        await new Promise((resolve, reject) => {
-            db.run(`CREATE TABLE IF NOT EXISTS ${tableName} (${columns})`, (err) => {
-                if (err) reject(err);
-                resolve();
+            // Read data from the CSV file and infer column types
+            await new Promise((resolve, reject) => {
+                fs.createReadStream(csvFilePath)
+                    .pipe(csv())
+                    .on('data', (row) => {
+                        if (isFirstLine) {
+                            columnTypes = inferColumnTypes(row);
+                            isFirstLine = false;
+                        }
+                    })
+                    .on('end', () => {
+                        resolve();
+                    })
+                    .on('error', (err) => {
+                        reject(err);
+                    });
             });
-        });
 
-        // Import data into the table, ignoring duplicates
-        await new Promise((resolve, reject) => {
-            fs.createReadStream(csvFilePath)
-                .pipe(csv())
-                .on('data', async (row) => {
-                    await insertDataIgnoringDuplicates(db, tableName, row);
-                })
-                .on('end', () => {
-                    processedFilesCount++;
-                    console.log(`CSV file '${csvFile}' successfully imported as table '${tableName}'.`);
+            // Create a table in the database based on the inferred column types
+            const columns = Object.entries(columnTypes).map(([columnName, columnType]) => {
+                return `${columnName} ${columnType}`;
+            }).join(', ');
 
-                    // Check if all files have been processed
-                    if (processedFilesCount === csvFiles.length) {
-                        // Close the database connection
-                        db.close();
-                        console.log('Database connection closed.');
-                    }
+            await new Promise((resolve, reject) => {
+                db.run(`CREATE TABLE IF NOT EXISTS ${tableName} (${columns})`, (err) => {
+                    if (err) reject(err);
                     resolve();
-                })
-                .on('error', (err) => {
-                    reject(err);
                 });
-        });
-    }
+            });
+
+            // Import data into the table, ignoring duplicates
+            await new Promise((resolve, reject) => {
+                fs.createReadStream(csvFilePath)
+                    .pipe(csv())
+                    .on('data', async (row) => {
+                        await insertDataIgnoringDuplicates(db, tableName, row);
+                    })
+                    .on('end', () => {
+                        processedFilesCount++;
+                        console.log(`CSV file '${csvFile}' successfully imported as table '${tableName}'.`);
+
+                        // Check if all files have been processed
+                        if (processedFilesCount === csvFiles.length) {
+                            // Close the database connection
+                            db.close();
+                            console.log('Database connection closed.');
+                        }
+                        resolve();
+                    })
+                    .on('error', (err) => {
+                        reject(err);
+                    });
+            });
+        }
+        resolve(); // Resolve the outer promise after all CSV files are processed
+    });
 }
 
 module.exports = {importCSVsAsTables}

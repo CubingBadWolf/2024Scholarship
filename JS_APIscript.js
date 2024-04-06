@@ -5,28 +5,32 @@ const date = new(Date)
 
 let year = date.getFullYear()
 let data;
-function CallAPI(url, output){
-    //Calls the API endpoint url and outputs to a .json and .csv with file name specified.
-    readConfigAsync()
-        .then(config => {
-            if (config) {
-                return getURLTextContents(url, config.orgID, config.eAuthID, config.eAppID);
-            }
-        })
-        .then(result => {
-            if (output == "staff"){
-                data = filterKeysInArray(result, true)
-            }
-            else{
-                data = filterKeysInArray(result, false);
-            }
-            outputDataToJsonFile(data, `${output}.json`)
-            convertJsonToCsv(data, `${output}.csv`)
-        })
-        .catch(error => {
-            console.error(error);
-        });
-    }
+function CallAPI(url, output) {
+    return new Promise((resolve, reject) => {
+        readConfigAsync()
+            .then(config => {
+                if (config) {
+                    return getURLTextContents(url, config.orgID, config.eAuthID, config.eAppID);
+                }
+            })
+            .then(result => {
+                let data;
+                if (output === "staff") {
+                    data = filterKeysInArray(result, true);
+                } else {
+                    data = filterKeysInArray(result, false);
+                }
+                outputDataToJsonFile(data, `${output}.json`);
+                convertJsonToCsv(data, `${output}.csv`);
+                resolve(); // Resolve the promise after API call is complete
+            })
+            .catch(error => {
+                console.error(error);
+                reject(error); // Reject the promise if there's an error
+            });
+    });
+}
+
 
 
 // Function to filter out School and SchoolNo as data same in all entries. 
