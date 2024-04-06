@@ -147,7 +147,7 @@ async function outputClasses(database, name) {
 }
 
 
-const name  = ["Lydia", "Evans"];
+/*const name  = ["Lydia", "Evans"];
 outputClasses(db, name)
     .then(([PrimaryClasses, SecondaryClasses]) => {
         console.log("Primary Classes:", PrimaryClasses);
@@ -155,4 +155,7 @@ outputClasses(db, name)
     })
     .catch(error => {
         console.error("Error:", error);
-    });
+    });*/
+
+module.exports = {outputClasses, returnGroupNoFromTeacher, returnPeriodCodeFromGroupNo,
+        GroupFromName, GetCode}

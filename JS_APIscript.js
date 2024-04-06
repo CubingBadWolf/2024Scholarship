@@ -121,7 +121,7 @@ function checkMembersGroup(url, num) {
 }
 
 async function StudentNums(num) {
-    const url = `https://edgeapi.edgelearning.co.nz/api/v1/school/groups/2024/${num}`;
+    const url = `https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}/${num}`;
     try {
         const jsonData = await checkMembersGroup(url, num);
         const key = "Students";
@@ -131,7 +131,8 @@ async function StudentNums(num) {
         return false; // Return false if there was an error
     }
 }
-module.exports = {StudentNums}
 
 //CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups")
 //CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff") //Tests.
+
+module.exports = {CallAPI, StudentNums}

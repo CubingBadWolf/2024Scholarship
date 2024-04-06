@@ -24,32 +24,63 @@ function inferColumnTypes(data) {
     return columnTypes;
 }
 
+// Function to insert data into the table, ignoring duplicates
+async function insertDataIgnoringDuplicates(db, tableName, rowData) {
+    const columnNames = Object.keys(rowData).join(', ');
+    const placeholders = Object.keys(rowData).map(() => '?').join(', ');
+    const values = Object.values(rowData);
+
+    // Check if the data already exists in the table
+    const existingData = await new Promise((resolve, reject) => {
+    const columnComparison = Object.keys(rowData).map(columnName => `${columnName} = ?`).join(' AND ');
+    const values = Object.values(rowData);
+
+    db.get(`SELECT * FROM ${tableName} WHERE ${columnComparison}`, values, (err, row) => {
+        if (err) {
+            reject(err);
+        } else {
+            resolve(row);
+        }
+    });
+});
+
+
+    // If data doesn't exist, insert it into the table
+    if (!existingData) {
+        await new Promise((resolve, reject) => {
+            const stmt = db.prepare(`INSERT INTO ${tableName} (${columnNames}) VALUES (${placeholders})`);
+            stmt.run(values, (err) => {
+                if (err) reject(err);
+                stmt.finalize();
+                resolve();
+            });
+        });
+    }
+}
+
 // Function to create a SQLite database and import data from CSV files
-function importCSVsAsTables(folderPath) {
+async function importCSVsAsTables(folderPath) {
     const dbFilePath = 'database.db';
     const db = new sqlite3.Database(dbFilePath);
 
     // Read the files in the folder
-    fs.readdir(folderPath, (err, files) => {
-        if (err) {
-            console.error('Error reading folder:', err);
-            return;
-        }
+    const files = await fs.promises.readdir(folderPath);
 
-        // Filter out CSV files
-        const csvFiles = files.filter(file => file.endsWith('.csv'));
+    // Filter out CSV files
+    const csvFiles = files.filter(file => file.endsWith('.csv'));
 
-        let processedFilesCount = 0;
+    let processedFilesCount = 0;
 
-        // Iterate through each CSV file
-        csvFiles.forEach((csvFile, index) => {
-            const tableName = path.parse(csvFile).name;
-            const csvFilePath = path.join(folderPath, csvFile);
-            
-            let isFirstLine = true;
-            let columnTypes = {};
+    // Iterate through each CSV file sequentially
+    for (const csvFile of csvFiles) {
+        const tableName = path.parse(csvFile).name;
+        const csvFilePath = path.join(folderPath, csvFile);
 
-            // Read data from the CSV file and infer column types
+        let isFirstLine = true;
+        let columnTypes = {};
+
+        // Read data from the CSV file and infer column types
+        await new Promise((resolve, reject) => {
             fs.createReadStream(csvFilePath)
                 .pipe(csv())
                 .on('data', (row) => {
@@ -59,51 +90,49 @@ function importCSVsAsTables(folderPath) {
                     }
                 })
                 .on('end', () => {
-                    // Create a table in the database based on the inferred column types
-                    const columns = Object.entries(columnTypes).map(([columnName, columnType]) => {
-                        if (index === 0 && columnType === 'INTEGER') {
-                            return `${columnName} INTEGER PRIMARY KEY`;
-                        } else {
-                            return `${columnName} ${columnType}`;
-                        }
-                    }).join(', ');
-                    
-                    db.serialize(() => {
-                        db.run(`CREATE TABLE IF NOT EXISTS ${tableName} (${columns})`);
-                    });
-                    
-
-                    // Import data into the table
-                    fs.createReadStream(csvFilePath)
-                        .pipe(csv())
-                        .on('data', (row) => {
-                            db.serialize(() => {
-                                const columnNames = Object.keys(row).join(', ');
-                                const placeholders = Object.keys(row).map(() => '?').join(', ');
-                                const values = Object.values(row);
-                                const stmt = db.prepare(`INSERT INTO ${tableName} (${columnNames}) VALUES (${placeholders})`);
-                                stmt.run(values);
-                                stmt.finalize();
-                            });
-                        })
-                        .on('end', () => {
-                            processedFilesCount++;
-                            console.log(`CSV file '${csvFile}' successfully imported as table '${tableName}'.`);
-
-                            // Check if all files have been processed
-                            if (processedFilesCount === csvFiles.length) {
-                                // Close the database connection
-                                db.close();
-                                console.log('Database connection closed.');
-                            }
-                        });
+                    resolve();
+                })
+                .on('error', (err) => {
+                    reject(err);
                 });
         });
-    });
+
+        // Create a table in the database based on the inferred column types
+        const columns = Object.entries(columnTypes).map(([columnName, columnType]) => {
+            return `${columnName} ${columnType}`;
+        }).join(', ');
+
+        await new Promise((resolve, reject) => {
+            db.run(`CREATE TABLE IF NOT EXISTS ${tableName} (${columns})`, (err) => {
+                if (err) reject(err);
+                resolve();
+            });
+        });
+
+        // Import data into the table, ignoring duplicates
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(csvFilePath)
+                .pipe(csv())
+                .on('data', async (row) => {
+                    await insertDataIgnoringDuplicates(db, tableName, row);
+                })
+                .on('end', () => {
+                    processedFilesCount++;
+                    console.log(`CSV file '${csvFile}' successfully imported as table '${tableName}'.`);
+
+                    // Check if all files have been processed
+                    if (processedFilesCount === csvFiles.length) {
+                        // Close the database connection
+                        db.close();
+                        console.log('Database connection closed.');
+                    }
+                    resolve();
+                })
+                .on('error', (err) => {
+                    reject(err);
+                });
+        });
+    }
 }
 
-// Get the folder path where the script is located
-const folderPath = __dirname;
-
-// Import CSV files as tables into the SQLite database
-importCSVsAsTables(folderPath);
+module.exports = {importCSVsAsTables}
