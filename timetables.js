@@ -127,3 +127,6 @@ WeekOne.PrintTimetable();
 
 WeekOne.weekTimetable[4].dayTimetable[0].changeCode('U');
 WeekOne.PrintTimetable();
+
+const WeekTest = new WeekTimetable(10, ['A','B','D','X'])
+WeekTest.PrintTimetable(); //Testing Flagging when teachers aren't teaching
