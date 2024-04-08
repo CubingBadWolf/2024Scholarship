@@ -117,7 +117,7 @@ class WeekTimetable {
     }
 }
 
-const basePeriodCodes = ['A', 'B', 'C', 'D', 'E', 'F', 'X', 'Y']
+/*const basePeriodCodes = ['A', 'B', 'C', 'D', 'E', 'F', 'X', 'Y']
 // Testing the code
 const Monday = new DayTimetable(0, basePeriodCodes);
 Monday.PrintTimetable();
@@ -129,4 +129,6 @@ WeekOne.weekTimetable[4].dayTimetable[0].changeCode('U');
 WeekOne.PrintTimetable();
 
 const WeekTest = new WeekTimetable(10, ['A','B','D','X'])
-WeekTest.PrintTimetable(); //Testing Flagging when teachers aren't teaching
+WeekTest.PrintTimetable(); //Testing Flagging when teachers aren't teaching*/
+
+module.exports = WeekTimetable;
