@@ -51,6 +51,7 @@ app.get('/api/timetable', async (req, res) => {
     }
 });
 
+// Function to generate timetable for a teacher
 async function generateTimetableForTeacher(name) {
     const date = new Date();
     const year = date.getFullYear();
@@ -65,7 +66,7 @@ async function generateTimetableForTeacher(name) {
 
     const db = new sqlite3.Database(dbFile);
 
-    const [PrimaryClasses, SecondaryClasses] = await QueryFunctions.outputClasses(db, name);
+    const [PrimaryClasses, SecondaryClasses] = await QueryFunctions.outputClasses(db, name.split(" "));
 
     let PrimaryPeriods = [];
     PrimaryClasses.forEach(Class => {
@@ -73,7 +74,18 @@ async function generateTimetableForTeacher(name) {
     });
 
     const TeacherTimeTable = new WeekTimetable(0, PrimaryPeriods);
-    return TeacherTimeTable.GetTimetable();
+    const output = TeacherTimeTable.returnWeek(); // Return the whole week's timetable
+    for(let n = 0; n < 5; n++){
+        for(let i = 0; i < output[n].length; i++){
+            for(let j = 0; j < PrimaryPeriods.length; j++){
+                if(output[n][i][1] == PrimaryPeriods[j]){
+                    output[n][i][1] = PrimaryClasses[j][1];
+                    break;
+                }
+            }
+        };
+    }
+    return output;
 }
 
 app.listen(port, () => {

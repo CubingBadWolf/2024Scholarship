@@ -1,2 +1,0 @@
-
-    const year = date.getFullYear();
