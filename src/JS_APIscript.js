@@ -1,4 +1,5 @@
 const fs = require('fs').promises;
+const path = require('path')
 const axios = require('axios');
 const json2csv = require('json2csv').parse;
 const date = new(Date)
@@ -49,7 +50,8 @@ function filterKeysInArray(jsonArray, isStaff) {
 
 async function readConfigAsync() {
     try {
-        const data = await fs.readFile('config.txt', 'utf8');
+        const loc = path.join(__dirname, 'config.txt')
+        const data = await fs.readFile(loc, 'utf8');
         const config = {};
         const lines = data.split('\n');
         lines.forEach(line => {

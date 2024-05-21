@@ -100,12 +100,26 @@ class WeekTimetable {
         }
     }
 
-    PrintTimetable(){
+    PrintTimetable() {
         console.log(` Week ${this.WeekNumber}:`);
         for (let i = 0; i < 5; i++) {
             this.weekTimetable[i].PrintTimetable();
             console.log();
         }
+    }
+
+    GetTimetable() {
+        const timetable = [];
+        for (let i = 0; i < 5; i++) {
+            const day = this.Days[i];
+            for (let j = 0; j < this.weekTimetable[i].periodsInDay; j++) {
+                const period = j + 1;
+                const periodCode = this.weekTimetable[i].getPeriodCode(j);
+                const status = this.weekTimetable[i].getPeriod(j).Status;
+                timetable.push([day, period, periodCode, status]);
+            }
+        }
+        return timetable;
     }
 
     getWeek() {
@@ -116,6 +130,7 @@ class WeekTimetable {
         return this.weekTimetable[day];
     }
 }
+
 
 /*const basePeriodCodes = ['A', 'B', 'C', 'D', 'E', 'F', 'X', 'Y']
 // Testing the code
