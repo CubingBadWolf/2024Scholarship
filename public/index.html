@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +11,14 @@
             border-collapse: collapse;
             width: 100%;
         }
-        th, td {
+
+        th,
+        td {
             border: 1px solid #dddddd;
             text-align: left;
             padding: 8px;
         }
+
         th {
             background-color: #f2f2f2;
         }
@@ -23,23 +27,32 @@
             border-collapse: collapse;
             display: inline-block;
         }
-        .status-key th, .status-key td {
+
+        .status-key th,
+        .status-key td {
             border: 1px solid #dddddd;
             text-align: center;
             padding: 4px;
-            white-space: nowrap; /* Prevent wrapping */
-            max-width:100%;
+            white-space: nowrap;
+            /* Prevent wrapping */
+            max-width: 100%;
         }
+
         .status-key th {
             background-color: #f2f2f2;
-            width: 50px; /* Adjust the width as needed */
+            width: 50px;
+            /* Adjust the width as needed */
         }
+
         .status-key td {
-            font-size: 16px; /* Adjust the font size as needed */
-            width: 60px; /* Adjust the width as needed */
+            font-size: 16px;
+            /* Adjust the font size as needed */
+            width: 60px;
+            /* Adjust the width as needed */
         }
     </style>
 </head>
+
 <body>
     <h1>Teacher Timetable</h1>
 
@@ -123,6 +136,19 @@
 
                 // Populate the dropdown menu with sorted teacher names
                 const teacherSelect = document.getElementById('teacherSelect');
+
+                // Create a default option for "Select Teacher"
+                const defaultOption = document.createElement('option');
+                defaultOption.textContent = "Select Teacher";
+                teacherSelect.appendChild(defaultOption);
+
+                // Add a separator
+                const separator = document.createElement('option');
+                separator.disabled = true;
+                separator.textContent = "-------------------";
+                teacherSelect.appendChild(separator);
+
+                // Add sorted teacher names as options
                 teachers.forEach(teacher => {
                     const option = document.createElement('option');
                     option.textContent = teacher;
@@ -132,14 +158,20 @@
                 // Event listener to fetch and display timetable when a teacher is selected
                 teacherSelect.addEventListener('change', () => {
                     const selectedTeacher = teacherSelect.value;
-                    fetch(`/api/timetable?name=${selectedTeacher}`)
-                        .then(response => response.json())
-                        .then(timetable => {
-                            displayTimetable(timetable);
-                        })
-                        .catch(error => {
-                            console.error('Error fetching timetable:', error);
-                        });
+                    // Check if a teacher other than "Select Teacher" is selected
+                    if (selectedTeacher !== "Select Teacher") {
+                        fetch(`/api/timetable?name=${selectedTeacher}`)
+                            .then(response => response.json())
+                            .then(timetable => {
+                                displayTimetable(timetable);
+                            })
+                            .catch(error => {
+                                console.error('Error fetching timetable:', error);
+                            });
+                    } else {
+                        // Clear timetable display if "Select Teacher" is chosen
+                        document.getElementById('timetable').innerHTML = '';
+                    }
                 });
             })
             .catch(error => {
@@ -177,4 +209,5 @@
     </table>
 
 </body>
+
 </html>
