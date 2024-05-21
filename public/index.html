@@ -45,34 +45,50 @@
         }
 
         // Function to create and display the timetable table
-        function displayTimetable(timetableData) {
+        function displayTimetable(weekTimetable) {
             const timetableDiv = document.getElementById('timetable');
             timetableDiv.innerHTML = ''; // Clear previous timetable data
 
             // Create the table element
             const table = document.createElement('table');
 
-            // Create and append the table header
+            // Create and append the table header row
             const headerRow = document.createElement('tr');
-            ['Day', 'Period', 'Class', 'Status'].forEach(headerText => {
+            headerRow.appendChild(document.createElement('th')); // Empty corner cell
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
                 const th = document.createElement('th');
-                th.textContent = headerText;
+                th.textContent = day;
                 headerRow.appendChild(th);
             });
             table.appendChild(headerRow);
 
-            // Create and append table rows for each timetable entry
-            timetableData.forEach(entry => {
-                const [day, period, className, status] = entry;
-
-                const row = document.createElement('tr');
-                ['Day', 'Period', 'Class', 'Status'].forEach(text => {
+            // Create and append table rows for each period
+            for (let i = 0; i < weekTimetable[0].length; i++) {
+                const periodNum = i + 1;
+                // Row header for period number
+                const periodHeaderRow = document.createElement('tr');
+                const periodHeader = document.createElement('th');
+                periodHeader.textContent = `Period ${periodNum}`;
+                periodHeaderRow.appendChild(periodHeader);
+                weekTimetable.forEach(day => {
+                    const [num, classInfo, status] = day[i];
                     const cell = document.createElement('td');
-                    cell.textContent = text === 'Day' ? day : text === 'Period' ? period : text === 'Class' ? className : status;
-                    row.appendChild(cell);
+                    const classSubheading = document.createElement('div');
+                    classSubheading.textContent = 'Class:';
+                    const classData = document.createElement('div');
+                    classData.textContent = classInfo || '-';
+                    const statusSubheading = document.createElement('div');
+                    statusSubheading.textContent = 'Status:';
+                    const statusData = document.createElement('div');
+                    statusData.textContent = status;
+                    cell.appendChild(classSubheading);
+                    cell.appendChild(classData);
+                    cell.appendChild(statusSubheading);
+                    cell.appendChild(statusData);
+                    periodHeaderRow.appendChild(cell);
                 });
-                table.appendChild(row);
-            });
+                table.appendChild(periodHeaderRow);
+            }
 
             // Append the table to the timetable div
             timetableDiv.appendChild(table);
