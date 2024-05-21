@@ -18,6 +18,26 @@
         th {
             background-color: #f2f2f2;
         }
+
+        .status-key {
+            border-collapse: collapse;
+            display: inline-block;
+        }
+        .status-key th, .status-key td {
+            border: 1px solid #dddddd;
+            text-align: center;
+            padding: 4px;
+            white-space: nowrap; /* Prevent wrapping */
+            max-width:100%;
+        }
+        .status-key th {
+            background-color: #f2f2f2;
+            width: 50px; /* Adjust the width as needed */
+        }
+        .status-key td {
+            font-size: 16px; /* Adjust the font size as needed */
+            width: 60px; /* Adjust the width as needed */
+        }
     </style>
 </head>
 <body>
@@ -126,5 +146,35 @@
                 console.error('Error fetching teacher data:', error);
             });
     </script>
+
+    <h3>Status Key</h3>
+
+    <table class="status-key">
+        <tr>
+            <th>Status Code</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>P</td>
+            <td>Present</td>
+        </tr>
+        <tr>
+            <td>U</td>
+            <td>Absent Unassigned</td>
+        </tr>
+        <tr>
+            <td>F</td>
+            <td>Absent Assigned</td>
+        </tr>
+        <tr>
+            <td>W</td>
+            <td>Work Attached</td>
+        </tr>
+        <tr>
+            <td>X</td>
+            <td>Not Teaching</td>
+        </tr>
+    </table>
+
 </body>
 </html>
