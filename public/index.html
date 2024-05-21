@@ -3,12 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Website Link Test</title>
+    <title>Teacher Timetable</title>
+    <style>
+        /* Add your CSS styles here */
+    </style>
 </head>
 <body>
-    <h1>Welcome to My Local Website Link Test Page</h1>
-    <p>If you can see this page, your local website is linked correctly!</p>
-    <p>Click the link below to visit the local website:</p>
-    <a href="http://localhost:3000" target="_blank">Visit My Local Website</a>
+    <h1>Teacher Timetable</h1>
+
+    <label for="teacherSelect">Select a Teacher:</label>
+    <select id="teacherSelect">
+        <!-- Dropdown options will be populated dynamically -->
+    </select>
+
+    <div id="timetable">
+        <!-- Timetable data will be displayed here -->
+    </div>
+
+    <script>
+        // JavaScript code to populate the dropdown and display timetable
+
+        // Function to sort teacher names alphabetically by last name
+        function sortTeacherNames(teachers) {
+            return teachers.sort((a, b) => {
+                const lastNameA = a.split(' ').pop();
+                const lastNameB = b.split(' ').pop();
+                return lastNameA.localeCompare(lastNameB);
+            });
+            //TODO remove teachers that have no classes, ie don't teach. THe gym projector should not be in here for example. 
+        }
+
+        // Fetch teacher data from the server
+        fetch('/api/teachers')
+            .then(response => response.json())
+            .then(teachers => {
+                // Sort teacher names alphabetically by last name
+                teachers = sortTeacherNames(teachers);
+
+                // Populate the dropdown menu with sorted teacher names
+                const teacherSelect = document.getElementById('teacherSelect');
+                teachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.textContent = teacher;
+                    teacherSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching teacher data:', error);
+            });
+    </script>
 </body>
 </html>
