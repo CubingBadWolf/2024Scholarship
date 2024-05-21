@@ -7,6 +7,7 @@ const APIfunctions = require('./JS_APIscript'); // Import APIfunctions module
 const DB = require('./BuildDatabase'); // Import DB module
 const QueryFunctions = require('./linkClassCode'); // Import QueryFunctions module
 const WeekTimetable = require('./timetables'); // Import WeekTimetable module
+const db = new sqlite3.Database(path.join(__dirname, '../src/database.db'))
 
 const app = express();
 const port = 3000;
@@ -28,7 +29,9 @@ app.get('/api/teachers', (req, res) => {
         .on('data', (row) => {
             // Extract teacher names and push them to the array
             const fullName = row['PreferredFirstnames'] + ' ' + row['PreferredSurname'];
-            teachers.push(fullName);
+            if(QueryFunctions.hasGroups(db, fullName.split(" "))){
+                teachers.push(fullName);
+            }
         })
         .on('end', () => {
             res.json(teachers); // Send the array of teacher names as JSON response

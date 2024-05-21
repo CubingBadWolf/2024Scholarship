@@ -146,6 +146,15 @@ async function outputClasses(database, name) {
     }
 }
 
+async function hasGroups(database, name) {
+    try {
+        const populatedClasses = await processGroups(database, name);
+        return populatedClasses.length > 0;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
 
 /*const name  = ["Lydia", "Evans"];
 outputClasses(db, name)
@@ -158,4 +167,4 @@ outputClasses(db, name)
     });*/
 
 module.exports = {outputClasses, returnGroupNoFromTeacher, returnPeriodCodeFromGroupNo,
-        GroupFromName, GetCode}
+        GroupFromName, GetCode, hasGroups}
