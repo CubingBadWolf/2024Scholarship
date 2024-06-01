@@ -9,16 +9,16 @@ async function main() {
     const date = new(Date);
     const year = date.getFullYear();
 
-    const folderPath = __dirname;
+    const folderPath = path.join(__dirname, "public");
     const dbFile = "database.db";
         
     await APIfunctions.CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups"),
     await APIfunctions.CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff")
 
     await DB.importCSVsAsTables(folderPath, dbFile);
-
-    const name = ["Tim", "Jones"];
     const db = new sqlite3.Database(dbFile);
+    const name = ["Tim", "Jones"];
+    
 
     const [PrimaryClasses, SecondaryClasses] = await QueryFunctions.outputClasses(db, name);
     console.log("Primary Classes:", PrimaryClasses);

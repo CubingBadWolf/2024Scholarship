@@ -7,10 +7,29 @@ const APIfunctions = require('./JS_APIscript'); // Import APIfunctions module
 const DB = require('./BuildDatabase'); // Import DB module
 const QueryFunctions = require('./linkClassCode'); // Import QueryFunctions module
 const WeekTimetable = require('./timetables'); // Import WeekTimetable module
-const db = new sqlite3.Database(path.join(__dirname, '../src/database.db'))
-
 const app = express();
 const port = 3000;
+const db = new sqlite3.Database(path.join(__dirname, '../src/public/database.db'))
+
+async function onInit() {
+    try {
+        const date = new Date();
+        const year = date.getFullYear();
+    
+        const folderPath = path.join(__dirname, "public")
+        const dbFile = path.join("public", "database.db");
+    
+        await APIfunctions.CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups");
+        await APIfunctions.CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff");
+    
+        await DB.importCSVsAsTables(folderPath, dbFile);
+        
+        console.log("Initialization completed successfully");
+    } catch (error) {
+        console.error('Error initializing server:', error);
+        throw error; // Re-throw the error to indicate initialization failure
+    }
+}
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, '../public')));
@@ -24,7 +43,7 @@ app.get('/', (req, res) => {
 // API endpoint to fetch teachers data
 app.get('/api/teachers', (req, res) => {
     const teachers = [];
-    fs.createReadStream(path.join(__dirname, 'staff.csv'))
+    fs.createReadStream(path.join(__dirname, 'public','staff.csv'))
         .pipe(csv())
         .on('data', (row) => {
             // Extract teacher names and push them to the array
@@ -56,18 +75,6 @@ app.get('/api/timetable', async (req, res) => {
 
 // Function to generate timetable for a teacher
 async function generateTimetableForTeacher(name) {
-    const date = new Date();
-    const year = date.getFullYear();
-
-    const folderPath = __dirname;
-    const dbFile = "database.db";
-
-    await APIfunctions.CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups");
-    await APIfunctions.CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff");
-
-    await DB.importCSVsAsTables(folderPath, dbFile);
-
-    const db = new sqlite3.Database(dbFile);
 
     const [PrimaryClasses, SecondaryClasses] = await QueryFunctions.outputClasses(db, name.split(" "));
 
@@ -88,9 +95,17 @@ async function generateTimetableForTeacher(name) {
             }
         };
     }
+    console.log('Timetable for ' + name)
     return output;
 }
-
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
+// Start the server after onInit() completes
+(async () => {
+    try {
+        await onInit();
+        app.listen(port, () => {
+            console.log(`Server is running on http://localhost:${port}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+    }
+})();

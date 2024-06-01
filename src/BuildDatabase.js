@@ -61,7 +61,8 @@ async function insertDataIgnoringDuplicates(db, tableName, rowData) {
 // Function to create a SQLite database and import data from CSV files
 async function importCSVsAsTables(folderPath) {
     return new Promise(async (resolve, reject) => {
-        const dbFilePath = 'database.db';
+        const dbFilePath = path.join(__dirname,'/public/', 'database.db');
+
         const db = new sqlite3.Database(dbFilePath);
 
         // Read the files in the folder

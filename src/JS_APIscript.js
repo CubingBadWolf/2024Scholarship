@@ -50,7 +50,7 @@ function filterKeysInArray(jsonArray, isStaff) {
 
 async function readConfigAsync() {
     try {
-        const loc = path.join(__dirname, 'config.txt')
+        const loc = path.join(__dirname,'/public/','config.txt')
         const data = await fs.readFile(loc, 'utf8');
         const config = {};
         const lines = data.split('\n');
@@ -88,7 +88,7 @@ async function outputDataToJsonFile(data, filename) {
         const jsonData = JSON.stringify(data, null, 2); // The second argument (null) is for replacer function, and the third argument (2) is for indentation
         
         // Write JSON string to file
-        await fs.writeFile(filename, jsonData);
+        await fs.writeFile(path.join(__dirname,'/public/', filename), jsonData);
 
         console.log(`Data has been successfully written to ${filename}`);
     } catch (error) {
@@ -103,7 +103,7 @@ async function convertJsonToCsv(jsonData, filename) {
         const csvData = json2csv(jsonData, { header: true });
 
         // Write CSV string to file
-        await fs.writeFile(filename, csvData);
+        await fs.writeFile(path.join(__dirname,'/public/', filename), csvData);
 
         console.log(`Data has been successfully written to ${filename}`);
     } catch (error) {
