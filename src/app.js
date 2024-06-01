@@ -122,9 +122,6 @@ async function generateTimetableForTeacher(name) {
         };
     }
 
-    console.log(PrimaryClasses);
-    console.log(TempRemove);
-
     for(const item of TempRemove){
         const index = PrimaryClasses.indexOf(item);
         if(index > -1){
