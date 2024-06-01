@@ -41,25 +41,44 @@ app.get('/', (req, res) => {
 
 
 // API endpoint to fetch teachers data
-app.get('/api/teachers', (req, res) => {
+app.get('/api/teachers', async (req, res) => {
     const teachers = [];
-    fs.createReadStream(path.join(__dirname, 'public','staff.csv'))
-        .pipe(csv())
-        .on('data', (row) => {
-            // Extract teacher names and push them to the array
-            const fullName = row['PreferredFirstnames'] + ' ' + row['PreferredSurname'];
-            if(QueryFunctions.hasGroups(db, fullName.split(" "))){
-                teachers.push(fullName);
-            }
-        })
-        .on('end', () => {
-            res.json(teachers); // Send the array of teacher names as JSON response
-        })
-        .on('error', (err) => {
-            console.error('Error reading CSV file:', err);
-            res.status(500).send('Server Error');
-        });
+    const csvStream = fs.createReadStream(path.join(__dirname, 'public', 'staff.csv'))
+        .pipe(csv());
+
+    const teacherPromises = [];
+
+    csvStream.on('data', (row) => {
+        // Extract teacher names
+        const fullName = row['PreferredFirstnames'] + ' ' + row['PreferredSurname'];
+        
+        // Queue up the promise for checking groups
+        const promise = QueryFunctions.hasGroups(db, fullName.split(" "))
+            .then((hasGroups) => {
+                if (hasGroups) {
+                    teachers.push(fullName);
+                }
+            })
+            .catch((err) => {
+                console.error('Error checking groups for teacher:', err);
+            });
+
+        teacherPromises.push(promise);
+    });
+
+    csvStream.on('end', async () => {
+        // Wait for all promises to resolve before sending response
+        await Promise.all(teacherPromises);
+        res.json(teachers); // Send the array of teacher names as JSON response
+    });
+
+    csvStream.on('error', (err) => {
+        console.error('Error reading CSV file:', err);
+        res.status(500).send('Server Error');
+    });
 });
+
+
 
 // Function to generate timetable for a teacher
 app.get('/api/timetable', async (req, res) => {
@@ -95,7 +114,7 @@ async function generateTimetableForTeacher(name) {
             }
         };
     }
-    console.log('Timetable for ' + name)
+    console.log('Secondary classes for ' + name + SecondaryClasses)
     return output;
 }
 // Start the server after onInit() completes
