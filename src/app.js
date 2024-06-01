@@ -85,7 +85,11 @@ app.get('/api/timetable', async (req, res) => {
     try {
         const teacherName = req.query.name;
         const timetable = await generateTimetableForTeacher(teacherName);
-        res.json(timetable);
+        const timetableData = {
+            timetable: timetable[0],
+            otherClasses: timetable[1]
+        };
+        res.json(timetableData);
     } catch (err) {
         console.error('Error generating timetable:', err);
         res.status(500).send('Server Error');
@@ -104,18 +108,33 @@ async function generateTimetableForTeacher(name) {
 
     const TeacherTimeTable = new WeekTimetable(0, PrimaryPeriods);
     const output = TeacherTimeTable.returnWeek(); // Return the whole week's timetable
+    let TempRemove = [];
+
     for(let n = 0; n < 5; n++){
         for(let i = 0; i < output[n].length; i++){
             for(let j = 0; j < PrimaryPeriods.length; j++){
                 if(output[n][i][1] == PrimaryPeriods[j]){
                     output[n][i][1] = PrimaryClasses[j][1];
+                    TempRemove.push(PrimaryClasses[j])
                     break;
                 }
             }
         };
     }
-    console.log('Secondary classes for ' + name + SecondaryClasses)
-    return output;
+
+    console.log(PrimaryClasses);
+    console.log(TempRemove);
+
+    for(const item of TempRemove){
+        const index = PrimaryClasses.indexOf(item);
+        if(index > -1){
+            PrimaryClasses.splice(index, 1);
+        }
+    } 
+    for(const Class of SecondaryClasses){
+        PrimaryClasses.push(Class)
+    }
+    return [output,PrimaryClasses];
 }
 // Start the server after onInit() completes
 (async () => {

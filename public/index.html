@@ -78,9 +78,12 @@
         }
 
         // Function to create and display the timetable table
-        function displayTimetable(weekTimetable) {
+        function displayTimetable(timetableData) {
             const timetableDiv = document.getElementById('timetable');
             timetableDiv.innerHTML = ''; // Clear previous timetable data
+
+            const timetable = timetableData.timetable;
+            const otherClasses = timetableData.otherClasses;
 
             // Create the table element
             const table = document.createElement('table');
@@ -96,14 +99,14 @@
             table.appendChild(headerRow);
 
             // Create and append table rows for each period
-            for (let i = 0; i < weekTimetable[0].length; i++) {
+            for (let i = 0; i < timetable[0].length; i++) {
                 const periodNum = i + 1;
                 // Row header for period number
                 const periodHeaderRow = document.createElement('tr');
                 const periodHeader = document.createElement('th');
                 periodHeader.textContent = `Period ${periodNum}`;
                 periodHeaderRow.appendChild(periodHeader);
-                weekTimetable.forEach(day => {
+                timetable.forEach(day => {
                     const [num, classInfo, status] = day[i];
                     const cell = document.createElement('td');
                     const classSubheading = document.createElement('div');
@@ -125,6 +128,22 @@
 
             // Append the table to the timetable div
             timetableDiv.appendChild(table);
+
+            // Add subheader
+            const subheader = document.createElement('h4');
+            subheader.textContent = 'Other Classes Taught:';
+            timetableDiv.appendChild(subheader);
+
+            // Check if there are other classes to display
+            if (otherClasses && otherClasses.length > 0) {
+                const otherClassesList = document.createElement('ul');
+                otherClasses.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = item[1] || '-';
+                    otherClassesList.appendChild(listItem);
+                });
+                timetableDiv.appendChild(otherClassesList);
+            }
         }
 
         // Fetch teacher data from the server
