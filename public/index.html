@@ -129,13 +129,14 @@
             // Append the table to the timetable div
             timetableDiv.appendChild(table);
 
-            // Add subheader
-            const subheader = document.createElement('h4');
-            subheader.textContent = 'Other Classes Taught:';
-            timetableDiv.appendChild(subheader);
-
             // Check if there are other classes to display
             if (otherClasses && otherClasses.length > 0) {
+                
+                // Add subheader
+                const subheader = document.createElement('h4');
+                subheader.textContent = 'Other Classes Taught:';
+                timetableDiv.appendChild(subheader);
+
                 const otherClassesList = document.createElement('ul');
                 otherClasses.forEach(item => {
                     const listItem = document.createElement('li');
