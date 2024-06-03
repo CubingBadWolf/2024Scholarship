@@ -8,7 +8,7 @@ const DB = require('./BuildDatabase'); // Import DB module
 const QueryFunctions = require('./linkClassCode'); // Import QueryFunctions module
 const WeekTimetable = require('./timetables'); // Import WeekTimetable module
 const app = express();
-const port = 3000;
+const port = 3001;
 const db = new sqlite3.Database(path.join(__dirname, '../src/public/database.db'))
 
 async function onInit() {

@@ -66,8 +66,6 @@
     </div>
 
     <script>
-        // JavaScript code to populate the dropdown and display timetable
-
         // Function to sort teacher names alphabetically by last name
         function sortTeacherNames(teachers) {
             return teachers.sort((a, b) => {
@@ -99,7 +97,7 @@
             table.appendChild(headerRow);
 
             // Create and append table rows for each period
-            for (let i = 0; i < timetable[0].length; i++) {
+            for (let i = 0; i < 5; i++) {
                 const periodNum = i + 1;
                 // Row header for period number
                 const periodHeaderRow = document.createElement('tr');
@@ -121,17 +119,49 @@
                     cell.appendChild(classData);
                     cell.appendChild(statusSubheading);
                     cell.appendChild(statusData);
+
                     periodHeaderRow.appendChild(cell);
                 });
+
+
                 table.appendChild(periodHeaderRow);
             }
+            
+            const period6Row = document.createElement('tr');
+            const period6Header = document.createElement('th');
+            period6Header.textContent = 'Period 6';
+            period6Row.appendChild(period6Header);
 
+            // Grey out cells for Monday, Tuesday, Wednesday, Friday
+            for (let i = 0; i < 5; i++) {
+                const cell = document.createElement('td');
+                if (i === 3) { // Thursday
+                    const [num, classInfo, status] = timetable[3][5];
+                    const classSubheading = document.createElement('div');
+                    classSubheading.textContent = 'Class:';
+                    const classData = document.createElement('div');
+                    classData.textContent = classInfo || '-';
+                    const statusSubheading = document.createElement('div');
+                    statusSubheading.textContent = 'Status:';
+                    const statusData = document.createElement('div');
+                    statusData.textContent = status;
+                    cell.appendChild(classSubheading);
+                    cell.appendChild(classData);
+                    cell.appendChild(statusSubheading);
+                    cell.appendChild(statusData);
+                } else {
+                    cell.style.backgroundColor = '#ccc';
+                }
+                period6Row.appendChild(cell);
+            }
+
+            table.appendChild(period6Row);
             // Append the table to the timetable div
             timetableDiv.appendChild(table);
 
             // Check if there are other classes to display
             if (otherClasses && otherClasses.length > 0) {
-                
+
                 // Add subheader
                 const subheader = document.createElement('h4');
                 subheader.textContent = 'Other Classes Taught:';
