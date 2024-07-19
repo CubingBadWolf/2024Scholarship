@@ -7,17 +7,12 @@ const sqlite3 = require('sqlite3').verbose();
 function inferColumnTypes(data) {
     const columnTypes = {};
 
-    // Iterate through each column
     Object.keys(data).forEach(column => {
         const value = data[column];
-
-        // Infer data type based on the value
         if (!isNaN(value) && Number.isInteger(parseFloat(value))) {
-            columnTypes[column] = 'INTEGER'; // Integer data
-        } else if (typeof value === 'string') {
-            columnTypes[column] = 'TEXT'; // Text data
+            columnTypes[column] = 'INTEGER';
         } else {
-            columnTypes[column] = 'TEXT'; // Fallback to text if type cannot be inferred
+            columnTypes[column] = 'TEXT';
         }
     });
 
@@ -30,22 +25,15 @@ async function insertDataIgnoringDuplicates(db, tableName, rowData) {
     const placeholders = Object.keys(rowData).map(() => '?').join(', ');
     const values = Object.values(rowData);
 
-    // Check if the data already exists in the table
-    const existingData = await new Promise((resolve, reject) => {
+    // Check if the data already exists
     const columnComparison = Object.keys(rowData).map(columnName => `${columnName} = ?`).join(' AND ');
-    const values = Object.values(rowData);
-
-    db.get(`SELECT * FROM ${tableName} WHERE ${columnComparison}`, values, (err, row) => {
-        if (err) {
-            reject(err);
-        } else {
+    const existingData = await new Promise((resolve, reject) => {
+        db.get(`SELECT 1 FROM ${tableName} WHERE ${columnComparison}`, values, (err, row) => {
+            if (err) reject(err);
             resolve(row);
-        }
+        });
     });
-});
 
-
-    // If data doesn't exist, insert it into the table
     if (!existingData) {
         await new Promise((resolve, reject) => {
             const stmt = db.prepare(`INSERT INTO ${tableName} (${columnNames}) VALUES (${placeholders})`);
@@ -58,11 +46,10 @@ async function insertDataIgnoringDuplicates(db, tableName, rowData) {
     }
 }
 
-// Function to create a SQLite database and import data from CSV files
-async function importCSVsAsTables(folderPath) {
+// Function to import CSVs as tables, recreating the database if needed
+function importCSVsAsTables(folderPath) {
     return new Promise(async (resolve, reject) => {
-        const dbFilePath = path.join(__dirname,'/public/', 'database.db');
-
+        const dbFilePath = path.join(__dirname,'../files/', 'database.db');
         const db = new sqlite3.Database(dbFilePath);
 
         // Read the files in the folder
@@ -136,7 +123,8 @@ async function importCSVsAsTables(folderPath) {
             });
         }
         resolve(); // Resolve the outer promise after all CSV files are processed
+        return db;
     });
 }
 
-module.exports = {importCSVsAsTables}
+module.exports = { importCSVsAsTables };
