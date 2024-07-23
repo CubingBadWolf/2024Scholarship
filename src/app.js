@@ -13,7 +13,7 @@ async function onInit() {
         await CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups");
         await CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff");
 
-        return importCSVsAsTables(path.join(__dirname, '/files')); //Return the database created for future usage
+        await importCSVsAsTables(path.join(__dirname, '/files')); 
 
     } catch (error) {
         console.error('Error initialising server:', error);
@@ -24,6 +24,7 @@ async function onInit() {
 
 async function executeQueries() {
     try {
+        await onInit();
         const dbFilePath = path.join(__dirname,'/files/', 'database.db');
         const db = new sqlite3.Database(dbFilePath);
 

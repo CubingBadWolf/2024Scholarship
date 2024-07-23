@@ -9,17 +9,25 @@ let year = date.getFullYear()
 const filesDir = path.resolve(__dirname, '../../src/files/');
 
 async function CallAPI(url, output) {
-    const result = await getURLTextContents(url, config.orgID, config.eAuthID, config.eAppID);
+    try {
+        const result = await getURLTextContents(url, config.orgID, config.eAuthID, config.eAppID);
 
-    let data;
-    if (output === "staff") {
-        data = filterKeysInArray(result, true);
-    } else {
-        data = filterKeysInArray(result, false);
+        let data;
+        if (output === "staff") {
+            data = filterKeysInArray(result, true);
+        } else {
+            data = filterKeysInArray(result, false);
         }
-        outputDataToJsonFile(data, `${output}.json`);
-        convertJsonToCsv(data, `${output}.csv`);
+        
+        await outputDataToJsonFile(data, `${output}.json`);
+        await convertJsonToCsv(data, `${output}.csv`);
+        
+    } catch (error) {
+        console.error(`Error processing API call for ${output}:`, error);
+        throw error; // Ensure to propagate the error
     }
+}
+
         
 
 // Function to filter out School and SchoolNo as data same in all entries. 

@@ -57,7 +57,7 @@ function importCSVsAsTables(folderPath) {
 
         // Filter out CSV files
         const csvFiles = files.filter(file => file.endsWith('.csv'));
-
+        
         let processedFilesCount = 0;
 
         // Iterate through each CSV file sequentially
