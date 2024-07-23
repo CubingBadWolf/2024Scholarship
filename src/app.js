@@ -1,42 +1,125 @@
-const { CallAPI } = require("./initFunctions/APIcalls");
-const queries = require("./initFunctions/Queries");
-const { importCSVsAsTables } = require("./initFunctions/BuildDB");
-const path = require('path');
+const express = require('express');
+const passport = require('passport');
+const OAuth2Strategy = require('passport-oauth2');
+const session = require('express-session');
 const sqlite3 = require('sqlite3').verbose();
+const bodyParser = require('body-parser');
+const mainSiteRouter = require('./mainSite');
+const config = require('../settings/config.js');
 
+const app = express();
+const port = 3000;
 
-async function onInit() {
-    try {
-        const date = new Date();
-        const year = date.getFullYear();
+// Set up database
+const db = new sqlite3.Database('./users.db');
 
-        await CallAPI(`https://edgeapi.edgelearning.co.nz/api/v1/school/groups/${year}`, "groups");
-        await CallAPI(`https://edgeapi.edgelearning.co.nz/api/V2/school/staff/${year}`, "staff");
+// Create users table if it doesn't exist
+db.run(`CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  oauth_id TEXT UNIQUE,
+  role TEXT
+)`);
 
-        await importCSVsAsTables(path.join(__dirname, '/files')); 
+// Middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(session({ secret: 'your-secret-key', resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+app.use(passport.session());
 
-    } catch (error) {
-        console.error('Error initialising server:', error);
-        throw error; // Ensure to propagate the error
+app.use('/main', ensureAuthenticated, mainSiteRouter);
+
+// Configure OAuth2 strategy
+passport.use(new OAuth2Strategy({
+    authorizationURL: 'https://edgeapi.edgelearning.co.nz/oaut2/authorize',
+    tokenURL: 'https://provider.com/oauth2/token',
+    clientID: 'YOUR_CLIENT_ID',
+    clientSecret: 'YOUR_CLIENT_SECRET',
+    callbackURL: "http://localhost:3000/auth/callback"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    // Check if user exists in database, if not, create new user
+    db.get("SELECT * FROM users WHERE oauth_id = ?", [profile.id], (err, row) => {
+      if (err) return cb(err);
+      if (!row) {
+        db.run("INSERT INTO users (oauth_id, role) VALUES (?, ?)", [profile.id, 'Student'], (err) => {
+          if (err) return cb(err);
+          return cb(null, { id: profile.id, role: 'Student' });
+        });
+      } else {
+        return cb(null, { id: row.oauth_id, role: row.role });
+      }
+    });
+  }
+));
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+  db.get("SELECT * FROM users WHERE oauth_id = ?", [id], (err, row) => {
+    done(err, row);
+  });
+});
+
+// Routes
+app.get('/auth', passport.authenticate('oauth2'));
+
+app.get('/auth/callback', 
+    passport.authenticate('oauth2', { failureRedirect: '/login' }),
+    (req, res) => {
+      res.redirect('/main');  // Redirect to the main page after successful login
     }
+  );
+  
+app.get('/main', ensureAuthenticated, (req, res) => {
+    res.sendFile(__dirname + '/public/main.html');
+  });
+
+app.get('/dashboard', ensureAuthenticated, (req, res) => {
+  res.send(`Welcome, ${req.user.role}!`);
+});
+
+app.get('/admin', ensureAdmin, (req, res) => {
+  res.send('Admin dashboard');
+});
+
+// Middleware to check if user is authenticated
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/auth');
 }
 
-
-async function executeQueries() {
-    try {
-        await onInit();
-        const dbFilePath = path.join(__dirname,'/files/', 'database.db');
-        const db = new sqlite3.Database(dbFilePath);
-
-        const name = ['Tim', 'Jones'];
-        const [PrimaryClasses, SecondaryClasses] = await queries.outputClasses(db, name);
-        console.log("Primary Classes:", PrimaryClasses);
-        console.log("Secondary Classes:", SecondaryClasses);
-    } catch (error) {
-        console.error("Error querying database:", error);
-    }
+// Middleware to check if user is an admin
+function ensureAdmin(req, res, next) {
+  if (req.isAuthenticated() && req.user.role === 'Administrator') {
+    return next();
+  }
+  res.status(403).send('Access denied');
 }
 
-executeQueries();
+// Route to change user role (admin only)
+app.post('/change-role', ensureAdmin, (req, res) => {
+  const { userId, newRole } = req.body;
+  db.run("UPDATE users SET role = ? WHERE oauth_id = ?", [newRole, userId], (err) => {
+    if (err) {
+      res.status(500).send('Error updating role');
+    } else {
+      res.send('Role updated successfully');
+    }
+  });
+});
 
-// Initialize and then execute queries
+app.get('/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) { return next(err); }
+      res.redirect('/');
+    });
+  });
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
